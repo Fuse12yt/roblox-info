@@ -2,101 +2,64 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Roblox Account Tracker</title>
+<title>Roblox Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 <style>
   body {
     font-family: 'Roboto', sans-serif;
     background: linear-gradient(135deg, #0f172a, #1e293b);
-    color: #fff;
+    color: white;
     text-align: center;
-    padding: 40px;
-    margin: 0;
+    margin:0;
+    padding:40px;
   }
 
   h1 { font-size: 2.5em; margin-bottom: 20px; }
 
   input {
-    padding: 12px;
-    width: 250px;
-    border-radius: 12px;
-    border: none;
-    margin-right: 10px;
-    font-size: 16px;
+    padding:12px; width:250px; border-radius:12px; border:none; margin-right:10px; font-size:16px;
   }
 
   button {
-    padding: 12px 18px;
-    border-radius: 12px;
-    border: none;
-    background: #22c55e;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-    transition: transform 0.2s, background 0.3s;
+    padding:12px 18px; border-radius:12px; border:none; background:#22c55e; color:white; font-weight:bold;
+    cursor:pointer; transition: transform 0.2s, background 0.3s;
   }
-
-  button:hover {
-    transform: scale(1.1);
-    background: #16a34a;
-  }
+  button:hover { transform: scale(1.05); background:#16a34a; }
 
   .card {
-    margin: 30px auto;
-    background: #1e293b;
-    padding: 25px;
-    border-radius: 20px;
-    display: inline-block;
-    width: 340px;
-    text-align: center;
-    box-shadow: 0 0 20px rgba(0,255,128,0.4);
-    border: 2px solid #22c55e;
-    animation: fadeIn 1s;
-    transition: transform 0.3s;
+    margin:30px auto; padding:25px; background:#1e293b; border-radius:20px;
+    width:340px; text-align:center; box-shadow:0 0 20px rgba(0,255,128,0.4);
+    border:2px solid #22c55e; animation:fadeIn 1s;
   }
-
   .card:hover { transform: translateY(-5px); }
 
-  img { border-radius: 50%; transition: transform 0.3s; margin-bottom: 15px;}
+  img { border-radius:50%; margin-bottom:15px; transition: transform 0.3s;}
   img:hover { transform: rotate(15deg); }
 
   .loader {
-    border: 6px solid #1e293b;
-    border-top: 6px solid #22c55e;
-    border-radius: 50%;
-    width: 50px; height: 50px;
-    margin: 30px auto;
-    animation: spin 1s linear infinite;
+    border:6px solid #1e293b; border-top:6px solid #22c55e; border-radius:50%;
+    width:50px; height:50px; margin:30px auto; animation:spin 1s linear infinite;
   }
 
   .leaderboard {
-    margin-top: 50px;
-    background: #0f172a;
-    padding: 20px;
-    border-radius: 15px;
-    display: inline-block;
-    box-shadow: 0 0 15px rgba(0,255,128,0.3);
+    margin-top:50px; background:#0f172a; padding:20px; border-radius:15px; display:inline-block;
+    box-shadow:0 0 15px rgba(0,255,128,0.3);
   }
+  .leaderboard h2 { margin-bottom:15px; }
+  .leaderboard ol { text-align:left; display:inline-block; }
 
-  .leaderboard h2 { margin-bottom: 15px; }
-  .leaderboard ol { text-align: left; display: inline-block; }
+  a { color:#22c55e; text-decoration:none; }
+  a:hover { text-decoration:underline; }
 
-  a { color: #22c55e; text-decoration: none; }
-  a:hover { text-decoration: underline; }
+  @keyframes spin {0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+  @keyframes fadeIn {from{opacity:0;transform:translateY(-20px);}to{opacity:1;transform:translateY(0);}}
 
-  @keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }
-  @keyframes fadeIn { from {opacity:0; transform: translateY(-20px);} to {opacity:1; transform: translateY(0);} }
-
-  footer {
-    margin-top: 60px;
-    font-size: 0.9em;
-    color: #a1a1aa;
-  }
+  footer {margin-top:60px; font-size:0.9em; color:#a1a1aa;}
 </style>
 </head>
 <body>
 
-<h1>🎮 Roblox Account Tracker</h1>
+<h1>🎮 Roblox Tracker</h1>
 
 <input type="text" id="username" placeholder="Entrez le pseudo Roblox">
 <button onclick="getUser()">Chercher</button>
@@ -112,8 +75,6 @@
 
 <script>
 let searchHistory = JSON.parse(localStorage.getItem("searchHistory")) || [];
-
-// Affiche le leaderboard au chargement
 updateLeaderboard();
 
 async function getUser() {
@@ -124,31 +85,24 @@ async function getUser() {
   resultDiv.innerHTML = '<div class="loader"></div>';
 
   try {
-    const proxy = "https://api.allorigins.win/raw?url=";
-
-    // 1️⃣ Récupérer l'ID du joueur via API Roblox
-    const userResponse = await fetch(proxy + encodeURIComponent("https://users.roblox.com/v1/usernames/users"), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ usernames: [username], excludeBannedUsers: false })
+    // ⚡ Utilisation API Roblox pour récupérer l’ID
+    const userResponse = await fetch(`https://users.roblox.com/v1/usernames/users`, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({usernames:[username], excludeBannedUsers:false})
     });
-
     const userData = await userResponse.json();
-    if (!userData.data || !userData.data.length) {
-      resultDiv.innerHTML = "Utilisateur non trouvé.";
-      return;
-    }
+    if(!userData.data || !userData.data.length){ resultDiv.innerHTML="Utilisateur non trouvé."; return;}
     const user = userData.data[0];
 
-    // 2️⃣ Avatar réel Roblox
+    // Avatar réel Roblox
     const avatarUrl = `https://www.roblox.com/headshot-thumbnail/image?userId=${user.id}&width=150&height=150&format=png`;
 
-    // 3️⃣ Badges (simulés pour fiabilité GitHub Pages)
+    // Simuler amis et badges (fiable pour GitHub Pages)
     const badges = ["Builder Club","Welcome Badge","Game Developer"];
-    // 4️⃣ Amis (simulés)
     const friendsCount = Math.floor(Math.random()*500);
 
-    // 5️⃣ Affichage carte
+    // Affichage carte
     resultDiv.innerHTML = `
       <div class="card">
         <a href="https://www.roblox.com/users/${user.id}/profile" target="_blank">
@@ -162,37 +116,32 @@ async function getUser() {
       </div>
     `;
 
-    // 6️⃣ Update leaderboard et sauvegarde
     updateLeaderboard(user.name);
 
   } catch(err) {
-    resultDiv.innerHTML = "Erreur lors du chargement.";
     console.error(err);
+    resultDiv.innerHTML = "Erreur lors du chargement.";
   }
 }
 
-function updateLeaderboard(name) {
+function updateLeaderboard(name){
   if(name) searchHistory.push(name);
-  // Compter occurrences
-  const counts = {};
-  searchHistory.forEach(n => counts[n] = (counts[n]||0)+1);
-  const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
-
-  // Sauvegarder localStorage
   localStorage.setItem("searchHistory", JSON.stringify(searchHistory));
 
-  const ol = document.getElementById("topUsers");
-  ol.innerHTML = '';
-  sorted.forEach(item => {
-    const li = document.createElement('li');
-    li.innerHTML = `<a href="https://www.roblox.com/users/${item[0]}/profile" target="_blank">${item[0]}</a> (${item[1]})`;
+  const counts = {};
+  searchHistory.forEach(n => counts[n]=(counts[n]||0)+1);
+  const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  const ol=document.getElementById("topUsers");
+  ol.innerHTML="";
+  sorted.forEach(item=>{
+    const li=document.createElement("li");
+    li.innerHTML=`<a href="https://www.roblox.com/users/${item[0]}/profile" target="_blank">${item[0]}</a> (${item[1]})`;
     ol.appendChild(li);
   });
 }
-
-// Affichage leaderboard au chargement
-updateLeaderboard();
 </script>
 
 </body>
 </html>
+
