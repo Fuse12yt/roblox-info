@@ -47,11 +47,15 @@
     padding: 25px;
     border-radius: 20px;
     display: inline-block;
-    width: 320px;
+    width: 340px;
     text-align: center;
-    box-shadow: 0 0 20px rgba(0,255,128,0.3);
+    box-shadow: 0 0 20px rgba(0,255,128,0.4);
+    border: 2px solid #22c55e;
     animation: fadeIn 1s;
+    transition: transform 0.3s;
   }
+
+  .card:hover { transform: translateY(-5px); }
 
   img { border-radius: 50%; transition: transform 0.3s; margin-bottom: 15px;}
   img:hover { transform: rotate(15deg); }
@@ -76,6 +80,9 @@
 
   .leaderboard h2 { margin-bottom: 15px; }
   .leaderboard ol { text-align: left; display: inline-block; }
+
+  a { color: #22c55e; text-decoration: none; }
+  a:hover { text-decoration: underline; }
 
   @keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }
   @keyframes fadeIn { from {opacity:0; transform: translateY(-20px);} to {opacity:1; transform: translateY(0);} }
@@ -104,7 +111,10 @@
 <footer>Projet éducatif – Données publiques Roblox uniquement</footer>
 
 <script>
-let searchHistory = [];
+let searchHistory = JSON.parse(localStorage.getItem("searchHistory")) || [];
+
+// Affiche le leaderboard au chargement
+updateLeaderboard();
 
 async function getUser() {
   const username = document.getElementById("username").value.trim();
@@ -114,34 +124,45 @@ async function getUser() {
   resultDiv.innerHTML = '<div class="loader"></div>';
 
   try {
-    // Utilisation de l'API publique Roblox pour pseudo + avatar
-    // ⚠️ Roblox limite certaines données, donc badges et amis seront simulés pour stabilité GitHub Pages
+    const proxy = "https://api.allorigins.win/raw?url=";
 
-    // Simuler récupération ID et avatar
-    const user = {
-      name: username,
-      id: Math.floor(Math.random()*100000000),
-      created: new Date(2015 + Math.floor(Math.random()*8), Math.floor(Math.random()*12), Math.floor(Math.random()*28)),
-      avatar: `https://www.roblox.com/headshot-thumbnail/image?userId=${Math.floor(Math.random()*100000000)}&width=150&height=150&format=png`
-    };
+    // 1️⃣ Récupérer l'ID du joueur via API Roblox
+    const userResponse = await fetch(proxy + encodeURIComponent("https://users.roblox.com/v1/usernames/users"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ usernames: [username], excludeBannedUsers: false })
+    });
 
-    // Simuler badges et amis
+    const userData = await userResponse.json();
+    if (!userData.data || !userData.data.length) {
+      resultDiv.innerHTML = "Utilisateur non trouvé.";
+      return;
+    }
+    const user = userData.data[0];
+
+    // 2️⃣ Avatar réel Roblox
+    const avatarUrl = `https://www.roblox.com/headshot-thumbnail/image?userId=${user.id}&width=150&height=150&format=png`;
+
+    // 3️⃣ Badges (simulés pour fiabilité GitHub Pages)
     const badges = ["Builder Club","Welcome Badge","Game Developer"];
+    // 4️⃣ Amis (simulés)
     const friendsCount = Math.floor(Math.random()*500);
 
-    // Affichage
+    // 5️⃣ Affichage carte
     resultDiv.innerHTML = `
       <div class="card">
-        <img src="${user.avatar}" width="150">
-        <strong>Pseudo:</strong> ${user.name}<br>
+        <a href="https://www.roblox.com/users/${user.id}/profile" target="_blank">
+          <img src="${avatarUrl}" width="150">
+        </a>
+        <strong>Pseudo:</strong> <a href="https://www.roblox.com/users/${user.id}/profile" target="_blank">${user.name}</a><br>
         <strong>ID:</strong> ${user.id}<br>
-        <strong>Créé le:</strong> ${user.created.toLocaleDateString()}<br>
+        <strong>Créé le:</strong> ${new Date(user.created).toLocaleDateString()}<br>
         <strong>Amis:</strong> ${friendsCount}<br>
         <strong>Badges:</strong> ${badges.join(", ")}
       </div>
     `;
 
-    // Update leaderboard
+    // 6️⃣ Update leaderboard et sauvegarde
     updateLeaderboard(user.name);
 
   } catch(err) {
@@ -151,19 +172,26 @@ async function getUser() {
 }
 
 function updateLeaderboard(name) {
-  searchHistory.push(name);
+  if(name) searchHistory.push(name);
+  // Compter occurrences
   const counts = {};
   searchHistory.forEach(n => counts[n] = (counts[n]||0)+1);
   const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  // Sauvegarder localStorage
+  localStorage.setItem("searchHistory", JSON.stringify(searchHistory));
 
   const ol = document.getElementById("topUsers");
   ol.innerHTML = '';
   sorted.forEach(item => {
     const li = document.createElement('li');
-    li.textContent = `${item[0]} (${item[1]})`;
+    li.innerHTML = `<a href="https://www.roblox.com/users/${item[0]}/profile" target="_blank">${item[0]}</a> (${item[1]})`;
     ol.appendChild(li);
   });
 }
+
+// Affichage leaderboard au chargement
+updateLeaderboard();
 </script>
 
 </body>
